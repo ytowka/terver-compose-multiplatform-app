@@ -28,4 +28,73 @@ class CalculatorViewModel : ViewModel(){
             it.copy(urnState = it.urnState.copy(mode = urnMode))
         }
     }
+
+    fun setCombNField(value: Int?){
+        _state.update {
+            it.copy(
+                combinatoricsState = it.combinatoricsState.copy(
+                    n = value
+                )
+            )
+        }
+    }
+
+    fun setRepetitions(value: Boolean){
+        _state.update {
+            it.copy(
+                combinatoricsState = it.combinatoricsState.copy(repetitions = value)
+            )
+        }
+    }
+
+    fun setCombKField(value: Int?){
+        _state.update {
+            it.copy(
+                combinatoricsState = it.combinatoricsState.copy(
+                    k = value
+                )
+            )
+        }
+    }
+
+    fun setCombMultiNField(value: String){
+        _state.update {
+            it.copy(
+                combinatoricsState = it.combinatoricsState.copy(repetitionsNField = value)
+            )
+        }
+    }
+
+    fun setUrnNField(value: Int?){
+        _state.update {
+            it.copy(
+                urnState = it.urnState.copy(n = value)
+            )
+        }
+    }
+    fun setUrnMField(value: Int?){
+        _state.update {
+            it.copy(
+                urnState = it.urnState.copy(m = value)
+            )
+        }
+    }
+    fun setUrnKField(value: Int?){
+        _state.update {
+            it.copy(
+                urnState = it.urnState.copy(k = value)
+            )
+        }
+    }
+    fun setUrnRField(value: Int?){
+        _state.update {
+            it.copy(
+                urnState = it.urnState.copy(r = value)
+            )
+        }
+    }
+
+    fun calculate(){
+
+    }
 }

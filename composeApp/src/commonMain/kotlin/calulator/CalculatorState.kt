@@ -1,46 +1,106 @@
 package calulator
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class ScreenState(
     val mode: Mode = Mode.Combinatorics,
     val urnState: UrnState = UrnState(
-        n = 0,
-        r = 0,
+        n = null,
+        k = null,
+        m = null,
+        r = null,
         mode = UrnMode.ALL
     ),
     val combinatoricsState: CombinatoricsState = CombinatoricsState(
         repetitions = false,
-        n = 0L,
-        k = 0L,
-        mode = CombinatoricsMode.Combination
+        n = null,
+        k = null,
+        mode = CombinatoricsMode.Placement
     ),
 )
 
+@Immutable
 data class UrnState(
-    val n: Long,
-    val r: Long,
+    val n: Int?,
+    val m: Int?,
+    val k: Int?,
+    val r: Int?,
     val mode: UrnMode,
-)
+    val result: Float? = null,
+) : Validateable{
+    val totalLessThanGrabbedError = if(n != null && k != null){
+        n < k
+    }else false
 
+    val totalLessThanMarkedError = if(n != null && m != null){
+        n < m
+    } else false
 
-data class CombinatoricsState(
-    val repetitions: Boolean,
-    val n: Long?,
-    val k: Long?,
-    val mode: CombinatoricsMode,
-)
+    val grabbedLessThanMarkedGrabbedError = if(k != null && r != null){
+        k < r
+    } else false
 
-/*sealed interface StartUserEvent : StartEvent{
+    val markedLessThanMarkedGrabbedError = if(m != null && r != null){
+        m < r
+    } else false
 
-    data class SetMode(val mode: Mode) : StartUserEvent
-
-    data class SetCombinatoricsMode(val combinatoricsMode: CombinatoricsMode) : StartUserEvent
-    data class SetUrnMode(val urnMode: UrnMode) : StartUserEvent
-
-    data class SetRepetitions(val enabled: Boolean) : StartUserEvent
-}*/
-
-enum class CombinatoricsMode { Placement, Permutations, Combination }
-enum class UrnMode{
-    ALL, PARTIAL
+    override val isValid = when(mode){
+        UrnMode.PARTIAL -> listOf(n,m,k,r).all { it != null } &&
+                !totalLessThanGrabbedError &&
+                !totalLessThanMarkedError &&
+                !grabbedLessThanMarkedGrabbedError &&
+                !markedLessThanMarkedGrabbedError
+        UrnMode.ALL -> listOf(n,m,k).all { it != null } &&
+                !totalLessThanGrabbedError &&
+                !totalLessThanMarkedError
+    }
 }
-enum class Mode { Urn , Combinatorics}
+
+interface Validateable{
+    val isValid: Boolean
+}
+
+@Immutable
+data class CombinatoricsState(
+    val repetitions: Boolean = false,
+    val n: Int? = null,
+    val k: Int? = null,
+    val repetitionsNField: String = "",
+    val mode: CombinatoricsMode = CombinatoricsMode.Placement,
+    val result: Int? = null,
+) : Validateable{
+    val isKError = if(k != null && n != null){
+        k > n
+    }else false
+
+    val repetitionsN = repetitionsNField
+        .split(Regex("[, :\\-.=+$#@_]+"))
+        .mapNotNull {
+            it.toIntOrNull()
+        }
+
+    override val isValid = when(mode){
+        CombinatoricsMode.Placement -> !isKError && n != null && k != null
+        CombinatoricsMode.Permutations -> if(repetitions){
+            n != null
+        }else{
+            repetitionsN.isNotEmpty()
+        }
+        CombinatoricsMode.Combination -> !isKError && n != null && k != null
+    }
+}
+interface LabeledEnum{
+    val label: String
+}
+enum class CombinatoricsMode(
+    override val label: String
+): LabeledEnum { Placement("Размещения"), Permutations("Перестановки"), Combination("Сочетания") }
+enum class UrnMode(
+    override val label: String
+): LabeledEnum{
+    ALL("Все"), PARTIAL("Частичные")
+}
+enum class Mode(
+    override val label: String
+): LabeledEnum {  Combinatorics("Комбинаторика"), Urn("Урновая Модель")}
