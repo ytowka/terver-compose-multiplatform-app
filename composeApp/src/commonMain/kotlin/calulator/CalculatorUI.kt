@@ -25,6 +25,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.Checkbox
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
@@ -96,7 +97,7 @@ fun CalculatorScreen(
             modifier = Modifier.verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ){
-            Spacer(modifier = Modifier.size(5.dp))
+            Spacer(modifier = Modifier.size(15.dp))
             AnimatedContent(
                 targetState = state.mode,
                 contentAlignment = Alignment.Center
@@ -129,6 +130,7 @@ fun CalculatorScreen(
             ){
                 Text("Посчитать")
             }
+            Spacer(modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -237,6 +239,10 @@ fun CombinatoricsFields(
             )
             Spacer(modifier = Modifier.size(5.dp))
             Text("С повторениями")
+        }
+        if(combState.loading){
+            Spacer(modifier = Modifier.size(5.dp))
+            CircularProgressIndicator()
         }
         AnimatedVisibility(combState.result != null){
             Column{
@@ -373,6 +379,10 @@ fun UrnFields(
                 }
             }
 
+        }
+        if(urnState.loading){
+            Spacer(modifier = Modifier.size(5.dp))
+            CircularProgressIndicator()
         }
         AnimatedVisibility(urnState.result != null){
             Column {

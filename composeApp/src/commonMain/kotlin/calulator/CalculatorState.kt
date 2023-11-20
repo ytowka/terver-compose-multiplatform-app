@@ -18,7 +18,14 @@ data class ScreenState(
         k = null,
         mode = CombinatoricsMode.Placement
     ),
-)
+){
+    val showLoading by lazy{
+        when(mode){
+            Mode.Combinatorics -> combinatoricsState.loading
+            Mode.Urn -> urnState.loading
+        }
+    }
+}
 
 @Immutable
 data class UrnState(
@@ -27,7 +34,8 @@ data class UrnState(
     val k: Int?,
     val r: Int?,
     val mode: UrnMode,
-    val result: Float? = null,
+    val result: String? = null,
+    val loading: Boolean = false,
 ) : Validateable{
     val totalLessThanGrabbedError = if(n != null && k != null){
         n < k
@@ -68,7 +76,8 @@ data class CombinatoricsState(
     val k: Int? = null,
     val repetitionsNField: String = "",
     val mode: CombinatoricsMode = CombinatoricsMode.Placement,
-    val result: Int? = null,
+    val result: String? = null,
+    val loading: Boolean = false,
 ) : Validateable{
     val isKError = if(k != null && n != null){
         k > n
@@ -82,7 +91,7 @@ data class CombinatoricsState(
 
     override val isValid = when(mode){
         CombinatoricsMode.Placement -> !isKError && n != null && n > 0 && k != null && k > 0
-        CombinatoricsMode.Permutations -> if(repetitions){
+        CombinatoricsMode.Permutations -> if(!repetitions){
             n != null && n > 0
         }else{
             repetitionsN.isNotEmpty() && repetitionsN.all { it > 0 }
