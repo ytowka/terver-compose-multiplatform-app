@@ -95,6 +95,38 @@ class CalculatorViewModel : ViewModel(){
     }
 
     fun calculate(){
+        _state.update {
+            when(it.mode){
+                Mode.Combinatorics -> if(it.combinatoricsState.isValid){
+                    it.copy(combinatoricsState = it.combinatoricsState.run {
+                        copy(
+                            result = when (mode) {
+                                CombinatoricsMode.Placement -> if (repetitions) {
+                                    Calculator.calculatePlacementsWithReps(n!!, k!!)
+                                } else Calculator.calculatePlacementsNoReps(n!!, k!!)
 
+                                CombinatoricsMode.Permutations -> if (repetitions) {
+                                    Calculator.calculatePermutationWithReps(repetitionsN)
+                                } else Calculator.calculatePermutation(n!!)
+
+                                CombinatoricsMode.Combination -> if (repetitions) {
+                                    Calculator.combinationsWithReps(n!!, k!!)
+                                } else Calculator.combinations(n!!, k!!)
+                            }.intValue()
+                        )
+                    })
+                }else it
+                Mode.Urn -> if(it.urnState.isValid){
+                    it.copy(urnState = it.urnState.copy(
+                        result =  it.urnState.run {
+                            when (it.urnState.mode) {
+                                UrnMode.ALL -> Calculator.urnAll(n!!, m!!, k!!)
+                                UrnMode.PARTIAL -> Calculator.urnPartial(n!!, m!!, k!!, r!!)
+                            }.toFloat()
+                        }
+                    ))
+                }else it
+            }
+        }
     }
 }

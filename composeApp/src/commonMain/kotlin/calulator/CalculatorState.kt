@@ -46,12 +46,12 @@ data class UrnState(
     } else false
 
     override val isValid = when(mode){
-        UrnMode.PARTIAL -> listOf(n,m,k,r).all { it != null } &&
+        UrnMode.PARTIAL -> listOf(n,m,k,r).all { it != null && it > 0 } &&
                 !totalLessThanGrabbedError &&
                 !totalLessThanMarkedError &&
                 !grabbedLessThanMarkedGrabbedError &&
                 !markedLessThanMarkedGrabbedError
-        UrnMode.ALL -> listOf(n,m,k).all { it != null } &&
+        UrnMode.ALL -> listOf(n,m,k).all { it != null && it > 0 } &&
                 !totalLessThanGrabbedError &&
                 !totalLessThanMarkedError
     }
@@ -81,14 +81,18 @@ data class CombinatoricsState(
         }
 
     override val isValid = when(mode){
-        CombinatoricsMode.Placement -> !isKError && n != null && k != null
+        CombinatoricsMode.Placement -> !isKError && n != null && n > 0 && k != null && k > 0
         CombinatoricsMode.Permutations -> if(repetitions){
-            n != null
+            n != null && n > 0
         }else{
-            repetitionsN.isNotEmpty()
+            repetitionsN.isNotEmpty() && repetitionsN.all { it > 0 }
         }
         CombinatoricsMode.Combination -> !isKError && n != null && k != null
     }
+}
+
+private fun Int.moreThanZero(): Boolean{
+    return this > 0
 }
 interface LabeledEnum{
     val label: String
