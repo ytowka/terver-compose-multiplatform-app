@@ -18,13 +18,9 @@ data class ScreenState(
         k = null,
         mode = CombinatoricsMode.Placement
     ),
+    val history: List<ModeState> = emptyList(),
 ){
-    val showLoading by lazy{
-        when(mode){
-            Mode.Combinatorics -> combinatoricsState.loading
-            Mode.Urn -> urnState.loading
-        }
-    }
+
 }
 
 @Immutable
@@ -36,7 +32,7 @@ data class UrnState(
     val mode: UrnMode,
     val result: String? = null,
     val loading: Boolean = false,
-) : Validateable{
+) : Validateable, ModeState{
     val totalLessThanGrabbedError = if(n != null && k != null){
         n < k
     }else false
@@ -53,12 +49,18 @@ data class UrnState(
         m < r
     } else false
 
+    val lackOfMarked = if(n != null && m != null && k != null && r != null){
+        r <  k - (n- m)
+    } else false
+
+
     override val isValid = when(mode){
         UrnMode.PARTIAL -> listOf(n,m,k,r).all { it != null && it > 0 } &&
                 !totalLessThanGrabbedError &&
                 !totalLessThanMarkedError &&
                 !grabbedLessThanMarkedGrabbedError &&
-                !markedLessThanMarkedGrabbedError
+                !markedLessThanMarkedGrabbedError &&
+                !lackOfMarked
         UrnMode.ALL -> listOf(n,m,k).all { it != null && it > 0 } &&
                 !totalLessThanGrabbedError &&
                 !totalLessThanMarkedError
@@ -69,6 +71,8 @@ interface Validateable{
     val isValid: Boolean
 }
 
+sealed interface ModeState
+
 @Immutable
 data class CombinatoricsState(
     val repetitions: Boolean = false,
@@ -78,7 +82,7 @@ data class CombinatoricsState(
     val mode: CombinatoricsMode = CombinatoricsMode.Placement,
     val result: String? = null,
     val loading: Boolean = false,
-) : Validateable{
+) : Validateable, ModeState{
     val isKError = if(k != null && n != null){
         k > n
     }else false

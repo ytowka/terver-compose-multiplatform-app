@@ -28,6 +28,7 @@ import androidx.compose.material.Checkbox
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -130,6 +131,50 @@ fun CalculatorScreen(
             ){
                 Text("Посчитать")
             }
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                when(state.mode){
+                    Mode.Combinatorics -> {
+                        AnimatedVisibility(state.combinatoricsState.loading){
+                            Spacer(modifier = Modifier.size(5.dp))
+                            CircularProgressIndicator()
+                        }
+                        AnimatedVisibility(state.combinatoricsState.result != null){
+                            Column{
+                                Spacer(modifier = Modifier.size(5.dp))
+                                Text(
+                                    text = "Ответ: ${state.combinatoricsState.result}",
+                                    style = TextStyle(
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    Mode.Urn -> {
+                        AnimatedVisibility(state.urnState.loading){
+                            Spacer(modifier = Modifier.size(5.dp))
+                            CircularProgressIndicator()
+                        }
+                        AnimatedVisibility(state.urnState.result != null){
+                            Column {
+                                Spacer(modifier = Modifier.size(5.dp))
+                                Text(
+                                    text = "Вероятность: ${state.urnState.result}",
+                                    style = TextStyle(
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.size(20.dp))
         }
     }
@@ -173,61 +218,39 @@ fun CombinatoricsFields(
         )
         Spacer(modifier = Modifier.size(5.dp))
         if(combState.mode == CombinatoricsMode.Permutations && combState.repetitions){
-            OutlinedTextField(
+            Input(
                 value = combState.repetitionsNField,
                 onValueChange = {
                     onMultiNChange(it)
                 },
-                maxLines = 1,
-                singleLine = true,
-                label = {
-                    Text("Элементы (n₁ n₂ n n₃ ...)")
-                },
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                label = "Количество элементов (n₁ n₂ n₃ ...)",
+                error = null
             )
         }else{
-            OutlinedTextField(
+            Input(
                 value = combState.n?.toString() ?: "",
                 onValueChange = {
-                    if(it.length <= MAX_FIELD_LENGTH) onNChange(it.toIntOrNull())
+                    val intValue = it.toIntOrNull()
+                    if(it.length <= MAX_FIELD_LENGTH && (intValue != null || it.isEmpty())) onNChange(intValue)
                 },
-                maxLines = 1,
-                singleLine = true,
-                label = {
-                    Text("Всего (n)")
-                },
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                label = "Всего (n)",
+                error = null,
             )
         }
         Spacer(modifier = Modifier.size(5.dp))
         val error = combState.isKError
         AnimatedVisibility(combState.mode != CombinatoricsMode.Permutations){
-            Column(
-                modifier = Modifier.width(IntrinsicSize.Min)
-            ) {
-                OutlinedTextField(
-                    value = combState.k?.toString() ?: "",
-                    onValueChange = {
-                        if(it.length <= MAX_FIELD_LENGTH) onKChange(it.toIntOrNull())
-                    },
-                    maxLines = 1,
-                    singleLine = true,
-                    label = {
-                        Text("Выборка (k)")
-                    },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                    isError = error,
-                )
-                Spacer(modifier = Modifier.size(2.dp))
+            Input(
+                value = combState.k?.toString() ?: "",
+                onValueChange = {
+                    val intValue = it.toIntOrNull()
+                    if(it.length <= MAX_FIELD_LENGTH && (intValue != null || it.isEmpty())) onKChange(intValue)
+                },
+                label = "Выборка (k)",
                 if(error){
-                    Text(
-                        text = "Выборка должна быть меньше\nколичества всех элементов",
-                        color = MaterialTheme.colors.error,
-                        fontSize = 12.sp
-                    )
-                }
-            }
-
+                    "Выборка должна быть меньше\nколичества всех элементов"
+                }else null
+            )
         }
         Spacer(modifier = Modifier.size(5.dp))
         Row(
@@ -239,22 +262,6 @@ fun CombinatoricsFields(
             )
             Spacer(modifier = Modifier.size(5.dp))
             Text("С повторениями")
-        }
-        if(combState.loading){
-            Spacer(modifier = Modifier.size(5.dp))
-            CircularProgressIndicator()
-        }
-        AnimatedVisibility(combState.result != null){
-            Column{
-                Spacer(modifier = Modifier.size(5.dp))
-                Text(
-                    text = "Ответ: ${combState.result}",
-                    style = TextStyle(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-            }
         }
     }
 }
@@ -286,115 +293,89 @@ fun UrnFields(
             contentDescription = null,
         )
         Spacer(modifier = Modifier.size(5.dp))
-
-        OutlinedTextField(
+        Input(
             value = urnState.n?.toString() ?: "",
             onValueChange = {
-                if(it.length <= MAX_FIELD_LENGTH) onNChange(it.toIntOrNull())
+                val intValue = it.toIntOrNull()
+                if(it.length <= MAX_FIELD_LENGTH && (intValue != null || it.isEmpty())) onNChange(intValue)
             },
-            maxLines = 1,
-            singleLine = true,
-            label = {
-                Text("Всего элементов (n)")
-            },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+            label = "Всего элементов (n)",
+            error = null
         )
         Spacer(modifier = Modifier.size(5.dp))
-        OutlinedTextField(
+        Input(
             value = urnState.m?.toString() ?: "",
             onValueChange = {
-                if(it.length <= MAX_FIELD_LENGTH) onMChange(it.toIntOrNull())
+                val intValue = it.toIntOrNull()
+                if(it.length <= MAX_FIELD_LENGTH && (intValue != null || it.isEmpty())) onMChange(intValue)
             },
-            maxLines = 1,
-            singleLine = true,
-            label = {
-                Text("Меченых элементов (m)")
-            },
-            isError = urnState.totalLessThanMarkedError,
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+            label = "Меченых элементов (m)",
+            error = when{
+                urnState.totalLessThanMarkedError -> "Меченых элементов должно быть\nменьше количества всех элементов"
+                else -> null
+            }
         )
-        if(urnState.totalLessThanMarkedError){
-            Spacer(modifier = Modifier.size(2.dp))
-            Text(
-                text = "Меченых элементов должно быть\nменьше количества всех элементов",
-                color = MaterialTheme.colors.error,
-                fontSize = 12.sp
-            )
-        }
         Spacer(modifier = Modifier.size(25.dp))
-        OutlinedTextField(
+        Input(
             value = urnState.k?.toString() ?: "",
             onValueChange = {
-                if(it.length <= MAX_FIELD_LENGTH) onKChange(it.toIntOrNull())
+                val intValue = it.toIntOrNull()
+                if(it.length <= MAX_FIELD_LENGTH && (intValue != null || it.isEmpty())) onKChange(intValue)
             },
+            label = "Взяли (k)",
+            error = when{
+                urnState.totalLessThanGrabbedError -> "Выборка должна быть\nменьше количества всех элементов"
+                else -> null
+            }
+        )
+        Spacer(modifier = Modifier.size(5.dp))
+        AnimatedVisibility(urnState.mode == UrnMode.PARTIAL){
+            Input(
+                value = urnState.r?.toString() ?: "",
+                onValueChange = {
+                    if(it.length <= MAX_FIELD_LENGTH) onRChange(it.toIntOrNull())
+                },
+                label = "Меченых среди взятых (r)",
+                error = when{
+                    urnState.grabbedLessThanMarkedGrabbedError -> "Выбранных меченых должно быть\nменьше чем всего взятых"
+                    urnState.markedLessThanMarkedGrabbedError -> "Выбранных меченых должно\nбыть меньше чем всего меченых"
+                    urnState.lackOfMarked -> "невозможно взять столько меченых,\nнехватит обычных"
+                    else -> null
+                }
+            )
+
+        }
+
+    }
+}
+
+@Composable
+fun Input(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    error: String?,
+    keyboardType: KeyboardType = KeyboardType.Number
+){
+    Column{
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
             maxLines = 1,
             singleLine = true,
             label = {
-                Text("Взяли (k)")
+                Text(label)
             },
-            isError = urnState.totalLessThanGrabbedError,
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+            isError = error != null,
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = keyboardType)
         )
-        if(urnState.totalLessThanGrabbedError){
+        if(error != null){
             Spacer(modifier = Modifier.size(2.dp))
             Text(
-                text = "Выборка должна быть\nменьше количества всех элементов",
+                text = error,
                 color = MaterialTheme.colors.error,
                 fontSize = 12.sp
             )
-        }
-        Spacer(modifier = Modifier.size(5.dp))
-        AnimatedVisibility(urnState.mode == UrnMode.PARTIAL){
-            Column(
-
-            ) {
-                OutlinedTextField(
-                    value = urnState.r?.toString() ?: "",
-                    onValueChange = {
-                        if(it.length <= MAX_FIELD_LENGTH) onRChange(it.toIntOrNull())
-                    },
-                    maxLines = 1,
-                    singleLine = true,
-                    label = {
-                        Text("Меченых среди взятых (r)")
-                    },
-                    isError = urnState.grabbedLessThanMarkedGrabbedError || urnState.markedLessThanMarkedGrabbedError,
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
-                )
-                Spacer(modifier = Modifier.size(5.dp))
-                if(urnState.grabbedLessThanMarkedGrabbedError){
-                    Spacer(modifier = Modifier.size(2.dp))
-                    Text(
-                        text = "Выбранных меченых должно быть\nменьше чем всего взятых",
-                        color = MaterialTheme.colors.error,
-                        fontSize = 12.sp
-                    )
-                }else if(urnState.markedLessThanMarkedGrabbedError){
-                    Spacer(modifier = Modifier.size(2.dp))
-                    Text(
-                        text = "Выбранных меченых должно\nбыть меньше чем всего меченых",
-                        color = MaterialTheme.colors.error,
-                        fontSize = 12.sp
-                    )
-                }
-            }
-
-        }
-        if(urnState.loading){
-            Spacer(modifier = Modifier.size(5.dp))
-            CircularProgressIndicator()
-        }
-        AnimatedVisibility(urnState.result != null){
-            Column {
-                Spacer(modifier = Modifier.size(5.dp))
-                Text(
-                    text = "Вероятность: ${urnState.result}",
-                    style = TextStyle(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-            }
         }
     }
 }
@@ -450,7 +431,7 @@ fun RowScope.SelectorButton(
                 onClick = onClick,
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() })
-            .height(40.dp)
+            .height(50.dp)
             .weight(1f),
         contentAlignment = Alignment.Center
     ) {
